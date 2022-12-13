@@ -35,8 +35,6 @@ class AuthenticateUserService {
 
     const token = sign({}, secret, { expiresIn, subject: user.id });
 
-    console.log(typeof user.id);
-
     return { user, token };
   }
 }

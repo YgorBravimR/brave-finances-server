@@ -1,17 +1,18 @@
 import { getRepository } from 'typeorm';
-import { hash } from 'bcryptjs';
-import { AppError } from '../errors/AppError';
 import { User } from '../app/models/User';
+import { AppError } from '../errors/AppError';
+
 import * as Yup from 'yup';
 
 interface IRequest {
+  user_id: string;
   fullname: string;
   email: string;
   password: string;
 }
 
-class CreateUserService {
-  public async execute({ fullname, email, password }: IRequest): Promise<User> {
+class UpdateUserInfoService {
+  public async execute({ user_id, fullname, email, password }: IRequest): Promise<User> {
     const usersRepository = getRepository(User);
 
     const schema = Yup.object().shape({
@@ -19,7 +20,6 @@ class CreateUserService {
       email: Yup.string().email().required(),
       password: Yup.string()
         .required()
-        //Must Contain 8 Char, 1 Uppercase, 1 Lowercase, 1 Number and 1 Special Case Char
         .matches(/^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*])/),
     });
 
@@ -27,24 +27,26 @@ class CreateUserService {
       throw new AppError('Error on validate mandatory informations', 400);
     }
 
-    const checkUserExists = await usersRepository.findOne({ where: { email } });
+    const checkUserExists = await usersRepository.findOne({
+      where: { email },
+    });
 
     if (checkUserExists) {
       throw new AppError('Email address already used');
     }
 
-    const hashedPassword = await hash(password, 8);
+    const user = await usersRepository.findOne(user_id);
 
-    const user = usersRepository.create({
-      fullname,
-      email,
-      password: hashedPassword,
-    });
+    if (!user) {
+      throw new AppError('Only authenticated users can change avatar', 401);
+    }
 
-    await usersRepository.save(user);
+    const updatedUser = { ...user, fullname, email, password };
 
-    return user;
+    await usersRepository.save(updatedUser);
+
+    return updatedUser;
   }
 }
 
-export { CreateUserService };
+export { UpdateUserInfoService };
