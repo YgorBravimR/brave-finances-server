@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 
+import { Account } from './Account';
 import { User } from './User';
 
 @Entity('transactions')
@@ -23,7 +24,11 @@ class Transaction {
   user: User;
 
   @Column()
-  account: string;
+  account_id: string;
+
+  @ManyToOne(() => Account)
+  @JoinColumn({ name: 'account_id' })
+  account: Account;
 
   @Column('integer')
   value: number;
@@ -32,7 +37,7 @@ class Transaction {
   description: string;
 
   @Column()
-  type: 'income' | 'expense';
+  type: string;
 
   @Column()
   date: Date;

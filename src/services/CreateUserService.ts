@@ -1,5 +1,5 @@
 import { getRepository } from 'typeorm';
-import { User } from '../models/User';
+import { User } from '../app/models/User';
 import { hash } from 'bcryptjs';
 import { AppError } from '../errors/AppError';
 

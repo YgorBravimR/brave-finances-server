@@ -6,7 +6,7 @@
   "password": "123456",
   "database": "brave_finances",
   "entities": [
-    "./src/models/*.ts"
+    "./src/app/models/*.ts"
   ],
   "migrations": [
     "./src/database/migrations/*.ts"

@@ -1,10 +1,10 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
 
-export class CreateTransaction1670586954693 implements MigrationInterface {
+export class CreateAccount1670941444839 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'transactions',
+        name: 'accounts',
         columns: [
           {
             name: 'id',
@@ -19,15 +19,11 @@ export class CreateTransaction1670586954693 implements MigrationInterface {
             isNullable: true,
           },
           {
-            name: 'account',
+            name: 'account_name',
             type: 'varchar',
           },
           {
-            name: 'value',
-            type: 'int',
-          },
-          {
-            name: 'description',
+            name: 'bank',
             type: 'varchar',
           },
           {
@@ -35,9 +31,8 @@ export class CreateTransaction1670586954693 implements MigrationInterface {
             type: 'varchar',
           },
           {
-            name: 'date',
-            type: 'timestamp with time zone',
-            default: 'now()',
+            name: 'description',
+            type: 'varchar',
           },
           {
             name: 'created_at',
@@ -53,9 +48,9 @@ export class CreateTransaction1670586954693 implements MigrationInterface {
       }),
     );
     await queryRunner.createForeignKey(
-      'transactions',
+      'accounts',
       new TableForeignKey({
-        name: 'TransactionUserId',
+        name: 'AccountUserId',
         columnNames: ['user_id'],
         referencedColumnNames: ['id'],
         referencedTableName: 'users',
@@ -66,7 +61,7 @@ export class CreateTransaction1670586954693 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropForeignKey('transactions', 'TransactionUserId');
-    await queryRunner.dropTable('transactions');
+    await queryRunner.dropForeignKey('accounts', 'AccountUserId');
+    await queryRunner.dropTable('accounts');
   }
 }
