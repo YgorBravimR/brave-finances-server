@@ -55,7 +55,9 @@ export default class UsersController {
   }
 
   public async updateInfo(req: Request, res: Response): Promise<Response> {
-    const { fullname, email, new_password, user_id, current_password } = req.body;
+    const { fullname, email, new_password, current_password } = req.body;
+
+    const user_id = req.user.id;
 
     const schema = Yup.object().shape({
       fullname: Yup.string().required(),
@@ -114,7 +116,9 @@ export default class UsersController {
   }
 
   public async delete(req: Request, res: Response): Promise<Response> {
-    const { password, user_id } = req.body;
+    const { password } = req.body;
+
+    const user_id = req.user.id;
 
     new DeleteUserService().execute({
       user_id,

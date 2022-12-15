@@ -13,7 +13,9 @@ import { Transaction } from '../models/Transaction';
 
 export default class TransactionsController {
   public async create(req: Request, res: Response): Promise<Response> {
-    const { account_id, user_id, value, description, type, date } = req.body;
+    const { account_id, value, description, type, date } = req.body;
+
+    const user_id = req.user.id;
 
     const transactionsTypeAvaiable = ['income', 'expense'];
 
@@ -44,7 +46,7 @@ export default class TransactionsController {
   }
 
   public async list(req: Request, res: Response): Promise<Response> {
-    const { user_id } = req.body;
+    const user_id = req.user.id;
 
     const listTransactions = getRepository(Transaction);
 
@@ -58,7 +60,9 @@ export default class TransactionsController {
   }
 
   public async update(req: Request, res: Response): Promise<Response> {
-    const { user_id, transaction_id, value, description, type, date } = req.body;
+    const { transaction_id, value, description, type, date } = req.body;
+
+    const user_id = req.user.id;
 
     const transactionsTypeAvaiable = ['income', 'expense'];
 
@@ -89,7 +93,9 @@ export default class TransactionsController {
 
   public async delete(req: Request, res: Response): Promise<Response> {
     try {
-      const { user_id, transaction_id } = req.body;
+      const { transaction_id } = req.body;
+
+      const user_id = req.user.id;
 
       new DeleteTransactionService().execute({
         user_id,

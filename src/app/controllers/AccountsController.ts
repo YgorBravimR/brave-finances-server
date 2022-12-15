@@ -11,7 +11,11 @@ import { DeleteAccountService } from '../../services/Accounts/DeleteAccountServi
 
 export default class AccountsController {
   public async create(req: Request, res: Response): Promise<Response> {
-    const { user_id, account_name, description, type, bank } = req.body;
+    const { account_name, description, type, bank } = req.body;
+
+    const user_id = req.user.id;
+
+    console.log(user_id);
 
     const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
 
@@ -34,7 +38,7 @@ export default class AccountsController {
   }
 
   public async list(req: Request, res: Response): Promise<Response> {
-    const { user_id } = req.body;
+    const user_id = req.user.id;
 
     const listAccount = getRepository(Account);
 
@@ -48,7 +52,9 @@ export default class AccountsController {
   }
 
   public async update(req: Request, res: Response): Promise<Response> {
-    const { user_id, account_id, account_name, bank, description, type } = req.body;
+    const { account_id, account_name, bank, description, type } = req.body;
+
+    const user_id = req.user.id;
 
     const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
 
@@ -79,7 +85,9 @@ export default class AccountsController {
 
   public async delete(req: Request, res: Response): Promise<Response> {
     try {
-      const { password, user_id, account_id } = req.body;
+      const { password, account_id } = req.body;
+
+      const user_id = req.user.id;
 
       new DeleteAccountService().execute({
         user_id,
