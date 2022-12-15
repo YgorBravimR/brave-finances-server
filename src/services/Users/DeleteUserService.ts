@@ -1,7 +1,6 @@
 import { compare } from 'bcryptjs';
 import { getRepository } from 'typeorm';
-import { User } from '../app/models/User';
-// import { AppError } from '../errors/AppError';
+import { User } from '../../app/models/User';
 
 interface IRequest {
   user_id: string;

@@ -1,7 +1,5 @@
-import { Account } from '../app/models/Account';
-import { AccountsRepository } from '../app/repositories/AccountsRepository';
-
-import { getCustomRepository } from 'typeorm';
+import { Account } from '../../app/models/Account';
+import { getRepository } from 'typeorm';
 
 interface IRequest {
   account_name: string;
@@ -13,7 +11,7 @@ interface IRequest {
 
 class CreateAccountService {
   public async execute({ account_name, description, type, bank, user_id }: IRequest): Promise<Account> {
-    const accountsRepository = getCustomRepository(AccountsRepository);
+    const accountsRepository = getRepository(Account);
 
     const account = accountsRepository.create({
       account_name,

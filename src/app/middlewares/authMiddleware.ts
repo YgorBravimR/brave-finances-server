@@ -9,7 +9,7 @@ interface ITokenPayload {
   sub: string;
 }
 
-export default function ensureAuthenticated(req: Request, res: Response, next: NextFunction): void {
+export default function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {

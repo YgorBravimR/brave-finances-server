@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { CreateAccountService } from '../services/CreateAccountService';
+import AccountsController from '../app/controllers/AccountsController';
+import authMiddleware from '../app/middlewares/authMiddleware';
 
 const accountsRouter = Router();
 
-accountsRouter.post('/', async (req, res) => {
-  const { user_id, account_name, description, type, bank } = req.body;
+const accountsController = new AccountsController();
 
-  const createAccount = new CreateAccountService();
+accountsRouter.use(authMiddleware);
 
-  const account = await createAccount.execute({ user_id, account_name, description, type, bank });
-
-  return res.json(account);
-});
+accountsRouter.post('/', accountsController.create);
+accountsRouter.get('/', accountsController.list);
+accountsRouter.put('/', accountsController.update);
+accountsRouter.delete('/', accountsController.delete);
 
 export { accountsRouter };
