@@ -6,3 +6,4 @@ temp/
 zzzAnnotation
 tmp/*
 !tmp/.gitkeep
+.md
