@@ -1,19 +1,21 @@
 import 'reflect-metadata';
-
+import { JSONCookie } from 'cookie-parser';
 import 'express-async-errors';
-import express, { NextFunction, Response, Request } from 'express';
-
-import { routes } from './routes';
-
 import './database';
+import cors from 'cors';
+
+import express, { NextFunction, Response, Request } from 'express';
+import { routes } from './routes';
 import uploadConfig from './config/upload';
 import { AppError } from './errors/AppError';
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use('/files', express.static(uploadConfig.directory));
 app.use(routes);
+app.use(JSONCookie);
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {

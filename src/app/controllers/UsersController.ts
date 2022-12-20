@@ -47,11 +47,17 @@ export default class UsersController {
   }
 
   public async list(req: Request, res: Response): Promise<Response> {
+    const user_id = req.user.id;
+
     const usersRepository = getRepository(User);
 
-    const users = await usersRepository.find();
+    const user = await usersRepository.findOne(user_id);
 
-    return res.json(users);
+    if (!user) {
+      throw new AppError('This user does not exist');
+    }
+
+    return res.json(user);
   }
 
   public async updateInfo(req: Request, res: Response): Promise<Response> {
@@ -75,8 +81,6 @@ export default class UsersController {
     const usersRepository = getRepository(User);
 
     const user = await usersRepository.findOne(user_id);
-
-    console.log(user);
 
     if (!user) {
       throw new AppError('This user does not exist');

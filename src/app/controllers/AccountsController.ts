@@ -15,8 +15,6 @@ export default class AccountsController {
 
     const user_id = req.user.id;
 
-    console.log(user_id);
-
     const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
 
     const schema = Yup.object().shape({
