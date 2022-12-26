@@ -1,100 +1,119 @@
 import { Request, Response } from 'express';
 
 import * as Yup from 'yup';
-import { AppError } from '../../errors/AppError';
-import { getRepository } from 'typeorm';
-import { Account } from '../models/Account';
+import AppError from '../../errors/AppError';
 
 import { CreateAccountService } from '../../services/Accounts/CreateAccountService';
 import { UpdateAccountService } from '../../services/Accounts/UpdateAccountService';
-import { DeleteAccountService } from '../../services/Accounts/DeleteAccountService';
+import ResponseSuccess from '../../libs/responseSuccess';
+import { getMongoRepository } from 'typeorm';
+import { Account } from '../models/schemas/Account';
 
 export default class AccountsController {
   public async create(req: Request, res: Response): Promise<Response> {
-    const { account_name, description, type, bank } = req.body;
+    try {
+      const { account_name, description, color, simulated_yield, type, yield_model, bank } = req.body;
+      const user_id = req.user.id;
 
-    const user_id = req.user.id;
+      const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other', 'xp'];
 
-    const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
+      const schema = Yup.object().shape({
+        account_name: Yup.string().required(),
+        description: Yup.string().required(),
+        type: Yup.string().required(),
+        color: Yup.string().required(),
+        simulated_yield: Yup.number(),
+        yield_model: Yup.string(),
+        bank: Yup.string().required().oneOf(avaiableBanks),
+      });
 
-    const schema = Yup.object().shape({
-      account_name: Yup.string().required(),
-      description: Yup.string().required(),
-      type: Yup.string().required(),
-      bank: Yup.string().required().oneOf(avaiableBanks),
-    });
+      if (!(await schema.isValid({ account_name, description, color, simulated_yield, type, yield_model, bank }))) {
+        throw new Error('Error on validate mandatory information');
+      }
 
-    if (!(await schema.isValid({ account_name, description, type, bank }))) {
-      throw new AppError('Error on validate mandatory informations', 400);
+      const createAccount = new CreateAccountService();
+
+      const account = await createAccount.execute({
+        account_name,
+        description,
+        color,
+        simulated_yield,
+        type,
+        yield_model,
+        bank,
+        user_id,
+      });
+      return res.json(new ResponseSuccess({ account }));
+    } catch (error) {
+      return res.json(new AppError('Failed when trying to create an account.', (error as Error).message));
     }
-
-    const createAccount = new CreateAccountService();
-
-    const account = await createAccount.execute({ user_id, account_name, description, type, bank });
-
-    return res.json(account);
   }
 
   public async list(req: Request, res: Response): Promise<Response> {
-    const user_id = req.user.id;
-
-    const listAccount = getRepository(Account);
-
     try {
-      const accounts = await listAccount.find({ user_id });
+      const user_id = req.user.id;
 
-      return res.json(accounts);
-    } catch {
-      return res.json(new AppError('User not found', 404));
+      const accountRepository = getMongoRepository(Account);
+      const accounts = await accountRepository.find({
+        where: { user_id },
+      });
+
+      return res.json(new ResponseSuccess({ accounts }));
+    } catch (error) {
+      return res.json(new AppError('Failed when trying to list an account.', (error as Error).message));
     }
   }
 
   public async update(req: Request, res: Response): Promise<Response> {
-    const { account_id, account_name, bank, description, type } = req.body;
+    try {
+      const user_id = req.user.id;
 
-    const user_id = req.user.id;
+      const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
+      const schema = Yup.object().shape({
+        account_id: Yup.string().required(),
+        account_name: Yup.string(),
+        bank: Yup.string().oneOf(avaiableBanks),
+        description: Yup.string(),
+        type: Yup.string(),
+        color: Yup.string(),
+        simulated_yield: Yup.number(),
+        yield_model: Yup.string(),
+      });
 
-    const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other'];
+      if (!(await schema.isValid(req.body))) {
+        throw new Error('Error on validate mandatory informations');
+      }
 
-    const schema = Yup.object().shape({
-      account_name: Yup.string(),
-      bank: Yup.string().oneOf(avaiableBanks),
-      description: Yup.string(),
-      type: Yup.string(),
-    });
+      const updateAccountService = new UpdateAccountService();
 
-    if (!(await schema.isValid({ account_name, bank, description, type }))) {
-      throw new AppError('Error on validate mandatory informations', 400);
+      await updateAccountService.execute({
+        ...req.body,
+        user_id,
+      });
+
+      return res.json(new ResponseSuccess({ message: 'Account updated successfully' }));
+    } catch (error) {
+      return res.json(new AppError('Failed when trying to update an account.', (error as Error).message));
     }
-
-    const updateAccountService = new UpdateAccountService();
-
-    const updatedAccount = await updateAccountService.execute({
-      user_id,
-      account_id,
-      account_name,
-      bank,
-      description,
-      type,
-    });
-
-    return res.json(updatedAccount);
   }
 
   public async delete(req: Request, res: Response): Promise<Response> {
     try {
-      const { password, account_id } = req.body;
+      const { account_id } = req.body;
 
-      const user_id = req.user.id;
+      const accountsRepository = getMongoRepository(Account);
 
-      new DeleteAccountService().execute({
-        user_id,
-        password,
-        account_id,
-      });
-      return res.json({ success: `User com id: ${user_id} -> deleted succesfully` });
-    } catch {
-      return res.json({ error: 'Error on deletion of account' });
+      const account = await accountsRepository.findOne(account_id);
+
+      if (!account) {
+        throw new Error('Do not possibly delete');
+      }
+
+      await accountsRepository.remove(account);
+
+      return res.json(new ResponseSuccess({ message: 'Account deleted successfully' }));
+    } catch (error) {
+      return res.json(new AppError('Failed when trying to delete an account.', (error as Error).message));
     }
   }
 }
