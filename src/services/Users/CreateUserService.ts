@@ -1,6 +1,6 @@
-import { getRepository } from 'typeorm';
+import { getMongoRepository } from 'typeorm';
 import { hash } from 'bcryptjs';
-import { User } from '../../app/models/User';
+import User from '../../app/models/schemas/User';
 
 interface IRequest {
   fullname: string;
@@ -10,7 +10,13 @@ interface IRequest {
 
 class CreateUserService {
   public async execute({ fullname, email, password }: IRequest): Promise<User> {
-    const usersRepository = getRepository(User);
+    const usersRepository = getMongoRepository(User);
+
+    const checkUserExists = await usersRepository.findOne({ where: { email } });
+
+    if (checkUserExists) {
+      throw new Error('Email address already used');
+    }
 
     const hashedPassword = await hash(password, 8);
 

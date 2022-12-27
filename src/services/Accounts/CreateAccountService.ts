@@ -1,5 +1,6 @@
-import { Account } from '../../app/models/Account';
-import { getRepository } from 'typeorm';
+import { getMongoRepository } from 'typeorm';
+import { Account } from '../../app/models/schemas/Account';
+import User from '../../app/models/schemas/User';
 
 interface IRequest {
   account_name: string;
@@ -7,11 +8,41 @@ interface IRequest {
   type: string;
   bank: string;
   user_id: string;
+  color: string;
+  simulated_yield: number;
+  yield_model: string;
 }
 
 class CreateAccountService {
-  public async execute({ account_name, description, type, bank, user_id }: IRequest): Promise<Account> {
-    const accountsRepository = getRepository(Account);
+  public async execute({
+    account_name,
+    description,
+    color,
+    simulated_yield,
+    type,
+    yield_model,
+    bank,
+    user_id,
+  }: IRequest): Promise<Account> {
+    const usersRepository = getMongoRepository(User);
+    const checkUserExists = await usersRepository.findOne(user_id);
+
+    if (!checkUserExists) {
+      throw new Error('User do not exist');
+    }
+
+    const accountsRepository = getMongoRepository(Account);
+
+    const checkAccountExists = await accountsRepository.findOne({
+      where: {
+        account_name,
+        user_id,
+      },
+    });
+
+    if (checkAccountExists) {
+      throw new Error('Account already exists with this name');
+    }
 
     const account = accountsRepository.create({
       account_name,
@@ -19,6 +50,9 @@ class CreateAccountService {
       type,
       bank,
       user_id,
+      color,
+      simulated_yield,
+      yield_model,
     });
 
     await accountsRepository.save(account);
