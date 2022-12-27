@@ -25,9 +25,7 @@ class CreateAccountService {
     user_id,
   }: IRequest): Promise<Account> {
     const usersRepository = getMongoRepository(User);
-    console.log('user_id', user_id);
     const checkUserExists = await usersRepository.findOne(user_id);
-    console.log('checkUserExists', checkUserExists);
 
     if (!checkUserExists) {
       throw new Error('User do not exist');
@@ -41,7 +39,6 @@ class CreateAccountService {
         user_id,
       },
     });
-    console.log('checkAccountExists', checkAccountExists);
 
     if (checkAccountExists) {
       throw new Error('Account already exists with this name');

@@ -20,7 +20,6 @@ class UpdateAccountService {
     const { account_id } = accountChanges;
 
     const account = await accountsRepository.findOne(account_id);
-    console.log(account);
     if (!account) {
       throw new Error('Account not found');
     }

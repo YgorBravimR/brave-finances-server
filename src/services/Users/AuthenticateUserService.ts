@@ -29,7 +29,6 @@ class AuthenticateUserService {
     if (!passwordMatched) {
       throw new Error('Incorrect email/password combination');
     }
-    console.log(user.id);
     const { secret, expiresIn } = authConfig.jwt;
     const token = sign({}, secret, {
       expiresIn,
