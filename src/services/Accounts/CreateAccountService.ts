@@ -11,6 +11,7 @@ interface IRequest {
   color: string;
   simulated_yield: number;
   yield_model: string;
+  initial_price: string;
 }
 
 class CreateAccountService {
@@ -23,6 +24,7 @@ class CreateAccountService {
     yield_model,
     bank,
     user_id,
+    initial_price,
   }: IRequest): Promise<Account> {
     const usersRepository = getMongoRepository(User);
     const checkUserExists = await usersRepository.findOne(user_id);
@@ -53,6 +55,7 @@ class CreateAccountService {
       color,
       simulated_yield,
       yield_model,
+      initial_price,
     });
 
     await accountsRepository.save(account);

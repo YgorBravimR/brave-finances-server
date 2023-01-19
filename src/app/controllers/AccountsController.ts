@@ -12,22 +12,34 @@ import { Account } from '../models/schemas/Account';
 export default class AccountsController {
   public async create(req: Request, res: Response): Promise<Response> {
     try {
-      const { account_name, description, color, simulated_yield, type, yield_model, bank } = req.body;
+      const { initial_price, account_name, description, color, simulated_yield, type, yield_model, bank } = req.body;
       const user_id = req.user.id;
 
       const avaiableBanks = ['nubank', 'inter', 'itau', 'santander', 'bradesco', 'other', 'xp'];
 
       const schema = Yup.object().shape({
+        initial_price: Yup.string().required(),
         account_name: Yup.string().required(),
         description: Yup.string().required(),
         type: Yup.string().required(),
-        color: Yup.string().required(),
+        color: Yup.string(),
         simulated_yield: Yup.number(),
         yield_model: Yup.string(),
         bank: Yup.string().required().oneOf(avaiableBanks),
       });
 
-      if (!(await schema.isValid({ account_name, description, color, simulated_yield, type, yield_model, bank }))) {
+      if (
+        !(await schema.isValid({
+          initial_price,
+          account_name,
+          description,
+          color,
+          simulated_yield,
+          type,
+          yield_model,
+          bank,
+        }))
+      ) {
         throw new Error('Error on validate mandatory information');
       }
 
@@ -42,6 +54,7 @@ export default class AccountsController {
         yield_model,
         bank,
         user_id,
+        initial_price,
       });
       return res.json(new ResponseSuccess({ account }));
     } catch (error) {
