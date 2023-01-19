@@ -29,6 +29,9 @@ class Account {
   @Column()
   yield_model: string;
 
+  @Column()
+  initial_price: string;
+
   @CreateDateColumn()
   created_at: Date;
 

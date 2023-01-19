@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { getRepository } from 'typeorm';
 
 import * as Yup from 'yup';
-import { AppError } from '../../errors/AppError';
+import AppError from '../../errors/AppError';
 
 import { CreateTransactionService } from '../../services/Transactions/CreateTransactionService';
 import { DeleteTransactionService } from '../../services/Transactions/DeleteTransactionService';
@@ -27,7 +27,7 @@ export default class TransactionsController {
     });
 
     if (!(await schema.isValid({ value, description, type, date }))) {
-      throw new AppError('Error on validate mandatory informations', 400);
+      throw new AppError('Error on validate mandatory informations', '400');
     }
 
     const accountsRepository = getRepository(Account);
@@ -35,7 +35,7 @@ export default class TransactionsController {
     const userExist = await accountsRepository.findOne({ where: { user_id, id: account_id } });
 
     if (!userExist) {
-      throw new AppError('User not found', 404);
+      throw new AppError('User not found', '404');
     }
 
     const createTransaction = new CreateTransactionService();
@@ -55,7 +55,7 @@ export default class TransactionsController {
 
       return res.json(transactions);
     } catch {
-      return res.json(new AppError('User not found', 404));
+      return res.json(new AppError('User not found', '404'));
     }
   }
 
@@ -74,7 +74,7 @@ export default class TransactionsController {
     });
 
     if (!(await schema.isValid({ value, description, type, date }))) {
-      throw new AppError('Error on validate mandatory informations', 400);
+      throw new AppError('Error on validate mandatory informations', '400');
     }
 
     const updateTransactionService = new UpdateTransactionService();
