@@ -1,30 +1,37 @@
-import { getRepository } from 'typeorm';
-import { Account } from '../../app/models/Account';
+import { getMongoRepository } from 'typeorm';
+import { Account } from '../../app/models/schemas/Account';
 
 interface IRequest {
+  account_name?: string;
+  description?: string;
+  type?: string;
+  bank?: string;
   user_id: string;
+  color?: string;
+  simulated_yield?: number;
+  yield_model?: string;
   account_id: string;
-  account_name: string;
-  bank: string;
-  description: string;
-  type: string;
 }
 
 class UpdateAccountService {
-  public async execute({ user_id, account_id, account_name, bank, description, type }: IRequest): Promise<Account> {
-    const accountsRepository = getRepository(Account);
+  public async execute(accountChanges: IRequest): Promise<void> {
+    const accountsRepository = getMongoRepository(Account);
 
-    const account = await accountsRepository.findOne({ where: { user_id, id: account_id } });
+    const { account_id } = accountChanges;
 
+    const account = await accountsRepository.findOne(account_id);
     if (!account) {
       throw new Error('Account not found');
     }
 
-    const updatedAccount = { ...account, account_name, bank, description, type };
+    await accountsRepository.update(
+      {
+        id: account.id,
+      },
+      accountChanges,
+    );
 
-    await accountsRepository.save(updatedAccount);
-
-    return updatedAccount;
+    return;
   }
 }
 

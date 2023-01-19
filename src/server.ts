@@ -1,4 +1,11 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
+import path from 'path';
+
+const src = path.resolve(__dirname, '../');
+
+dotenv.config({ path: `${src}/.env.${process.env.NODE_ENV}` });
+
 import { JSONCookie } from 'cookie-parser';
 import 'express-async-errors';
 import './database';
@@ -7,7 +14,7 @@ import cors from 'cors';
 import express, { NextFunction, Response, Request } from 'express';
 import { routes } from './routes';
 import uploadConfig from './config/upload';
-import { AppError } from './errors/AppError';
+import AppError from './errors/AppError';
 
 const app = express();
 
@@ -19,10 +26,7 @@ app.use(JSONCookie);
 
 app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
-      status: 'error',
-      message: err.message,
-    });
+    return res.status(200).json(err);
   }
 
   console.error(err);
