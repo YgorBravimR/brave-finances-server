@@ -1,5 +1,5 @@
 import { getRepository } from 'typeorm';
-import { Transaction } from '../../app/models/Transaction';
+import { Transaction } from '../../app/models/schemas/Transaction';
 
 interface IRequest {
   user_id: string;

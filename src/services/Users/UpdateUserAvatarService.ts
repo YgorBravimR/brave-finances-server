@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 import uploadConfig from '../../../src/config/upload';
-import { User } from '../../app/models/User';
+import User from '../../app/models/schemas/User';
 
 interface IRequest {
   user_id: string;

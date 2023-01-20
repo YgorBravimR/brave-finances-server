@@ -39,16 +39,16 @@ class Transaction {
   fixed: boolean;
 
   @Column()
-  installment: boolean;
+  divided: boolean;
 
   @Column()
   repeat: boolean;
 
   @Column()
-  how_many: number;
+  repeated_times: number;
 
   @Column()
-  period: number;
+  time_period: string;
 
   @Column()
   transfer_origin: string;
