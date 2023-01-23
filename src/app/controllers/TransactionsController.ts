@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getRepository } from 'typeorm';
+import { getMongoRepository } from 'typeorm';
 
 import * as Yup from 'yup';
 import AppError from '../../errors/AppError';
@@ -8,6 +8,7 @@ import ResponseSuccess from '../../libs/responseSuccess';
 import { CreateTransactionService } from '../../services/Transactions/CreateTransactionService';
 import { DeleteTransactionService } from '../../services/Transactions/DeleteTransactionService';
 import { UpdateTransactionService } from '../../services/Transactions/UpdateTransactionService';
+import { Transaction } from '../models/schemas/Transaction';
 
 export default class TransactionsController {
   public async create(req: Request, res: Response): Promise<Response> {
@@ -29,13 +30,29 @@ export default class TransactionsController {
         repeat: Yup.boolean().required(),
         repeated_times: Yup.number().when('repeat', {
           is: true,
-          then: Yup.number().required(),
+          then: Yup.number().moreThan(0).required(),
         }),
-        time_period: Yup.string().when('repeat', {
-          is: true,
-          then: Yup.string().required(),
+        time_period: Yup.string().when('type', {
+          is: 'credit_card',
+          then: Yup.string().when('repeat', {
+            is: true,
+            then: Yup.string().oneOf(['month']).required(),
+          }),
+          otherwise: Yup.string().when('repeat', {
+            is: true,
+            then: Yup.string().oneOf(['month', 'day', 'week', 'year']).required(),
+          }),
         }),
         currency: Yup.string().required(),
+        credit_card_id: Yup.string().when('type', {
+          is: 'credit_card',
+          then: Yup.string().required(),
+          otherwise: Yup.string().notRequired(),
+        }),
+        transfer_destiny: Yup.string().when('type', {
+          is: 'transfer',
+          then: Yup.string().required(),
+        }),
       });
 
       if (!(await schema.isValid(req.body))) {
@@ -55,16 +72,17 @@ export default class TransactionsController {
   }
 
   public async list(req: Request, res: Response): Promise<Response> {
-    const user_id = req.user.id;
-
-    const listTransactions = getRepository(Transaction);
-
     try {
-      const transactions = await listTransactions.find({ user_id });
+      const user_id = req.user.id;
 
-      return res.json(transactions);
-    } catch {
-      return res.json(new AppError('User not found', '404'));
+      const transactionRepository = getMongoRepository(Transaction);
+      const transactions = await transactionRepository.find({
+        where: { user_id },
+      });
+
+      return res.json(new ResponseSuccess({ transactions }));
+    } catch (error) {
+      return res.json(new AppError('Failed when trying to list transactions.', (error as Error).message));
     }
   }
 

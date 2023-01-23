@@ -5,6 +5,7 @@ import { Category } from '../../app/models/schemas/Category';
 import { getMongoRepository } from 'typeorm';
 import User from '../../app/models/schemas/User';
 import { addDays, addMonths, addWeeks, addYears, format, isValid, parse } from 'date-fns';
+import { CreditCard } from '../../app/models/schemas/CreditCard';
 
 interface IRequest {
   user_id: string;
@@ -20,9 +21,30 @@ interface IRequest {
   repeat: boolean;
   repeated_times?: number;
   time_period?: string;
+  credit_card_id?: string;
+  transfer_destiny?: string;
   currency: string;
 }
 
+interface ITransaction {
+  user_id: string;
+  value: number;
+  paid: boolean;
+  date: string;
+  description: string;
+  category_id: string;
+  type: string;
+  account_id: string;
+  tag_id: string;
+  fixed: boolean;
+  repeat: boolean;
+  repeated_times: number;
+  time_period: string;
+  credit_card_id: string;
+  transfer_destiny: string;
+  currency: string;
+  installment: string;
+}
 class CreateTransactionService {
   public async execute({
     value,
@@ -39,7 +61,9 @@ class CreateTransactionService {
     time_period,
     currency,
     user_id,
-  }: IRequest): Promise<Transaction> {
+    credit_card_id,
+    transfer_destiny,
+  }: IRequest): Promise<ITransaction[]> {
     const usersRepository = getMongoRepository(User);
 
     const checkUserExists = await usersRepository.findOne(user_id);
@@ -64,6 +88,17 @@ class CreateTransactionService {
       throw new Error('Account do not belongs to this user');
     }
 
+    if (type === 'transfer') {
+      const checkAccountExistsTransfer = await accountsRepository.findOne(transfer_destiny);
+      if (!checkAccountExistsTransfer) {
+        throw new Error('Destination account do not exist.');
+      }
+
+      if (checkAccountExistsTransfer.user_id !== user_id) {
+        throw new Error('Destination account do not belongs to this user');
+      }
+    }
+
     const categoryRepository = getMongoRepository(Category);
 
     const checkCategoryExists = await categoryRepository.findOne(category_id);
@@ -86,31 +121,51 @@ class CreateTransactionService {
       throw new Error('Tag do not belongs to this user');
     }
 
+    if (type === 'credit_card') {
+      const creditCardRepository = getMongoRepository(CreditCard);
+
+      const checkCreditCardExists = await creditCardRepository.findOne(credit_card_id);
+      if (!checkCreditCardExists) {
+        throw new Error('Credit Card do not exist.');
+      }
+
+      if (checkCreditCardExists.user_id !== user_id) {
+        throw new Error('Credit Card do not belongs to this user');
+      }
+    }
+
     const transactionsRepository = getMongoRepository(Transaction);
-    const firstTransaction = {
+    const firstTransaction: ITransaction = {
       value,
       paid,
       date,
-      description,
+      description: description ? description : '',
       category_id,
       type,
       account_id,
-      tag_id,
+      tag_id: tag_id ? tag_id : '',
       fixed,
       repeat,
-      repeated_times,
-      time_period,
+      repeated_times: repeated_times ? repeated_times : 0,
+      time_period: time_period ? time_period : '',
       currency,
       user_id,
+      transfer_destiny: transfer_destiny ? transfer_destiny : '',
+      installment: `1/${repeated_times}`,
+      credit_card_id: credit_card_id ? credit_card_id : '',
     };
-    const arrayTransaction = [firstTransaction];
+    const arrayTransaction: ITransaction[] = [firstTransaction];
     if (repeat && !fixed && repeated_times) {
       for (let i = 1; i < repeated_times; i++) {
         // Adicione uma semana à data inicial
         switch (time_period) {
           case 'day':
             parsedDate = addDays(parsedDate, 1);
-            arrayTransaction.push({ ...firstTransaction, paid: false, date: format(parsedDate, 'yyyy-MM-dd') });
+            arrayTransaction.push({
+              ...firstTransaction,
+              paid: false,
+              date: format(parsedDate, 'yyyy-MM-dd'),
+            });
             break;
           case 'week':
             parsedDate = addWeeks(parsedDate, 1);
@@ -118,41 +173,26 @@ class CreateTransactionService {
             break;
           case 'month':
             parsedDate = addMonths(parsedDate, 1);
-            arrayTransaction.push({ ...firstTransaction, paid: false, date: format(parsedDate, 'yyyy-MM-dd') });
+            arrayTransaction.push({
+              ...firstTransaction,
+              paid: false,
+              date: format(parsedDate, 'yyyy-MM-dd'),
+              installment: `${i}/${repeated_times}`,
+            });
             break;
           case 'year':
             parsedDate = addYears(parsedDate, 1);
             arrayTransaction.push({ ...firstTransaction, paid: false, date: format(parsedDate, 'yyyy-MM-dd') });
             break;
-
           default:
             break;
         }
       }
     }
 
-    console.log('arrayTransaction', arrayTransaction);
-
-    const transaction = transactionsRepository.create({
-      value,
-      paid,
-      date,
-      description,
-      category_id,
-      type,
-      account_id,
-      tag_id,
-      fixed,
-      repeat,
-      repeated_times,
-      time_period,
-      currency,
-      user_id,
-    });
-
     await transactionsRepository.save(arrayTransaction);
 
-    return transaction;
+    return arrayTransaction;
   }
 }
 

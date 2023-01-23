@@ -21,7 +21,7 @@ class Transaction {
   type: string;
 
   @Column()
-  date: Date;
+  date: string;
 
   @Column()
   paid: boolean;
@@ -39,9 +39,6 @@ class Transaction {
   fixed: boolean;
 
   @Column()
-  divided: boolean;
-
-  @Column()
   repeat: boolean;
 
   @Column()
@@ -51,13 +48,13 @@ class Transaction {
   time_period: string;
 
   @Column()
-  transfer_origin: string;
-
-  @Column()
   transfer_destiny: string;
 
   @Column()
   credit_card_id: string;
+
+  @Column()
+  installment: string;
 
   @CreateDateColumn()
   created_at: Date;
